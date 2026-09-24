@@ -5,7 +5,8 @@ Wi-Fi (`TB305FU`, device `clove_row_wifi`), a MediaTek MT6768/MT8786 tablet
 with a GKI 6.6 kernel.
 
 **Status: boots to the LineageOS home/lock screen with SELinux enforcing, on an
-existing encrypted `/data`. Wi-Fi works. Much is still untested — see
+existing encrypted `/data`. Wi-Fi connects and passes traffic. Much is still
+untested — see
 [Status](#status).** This is a bring-up tree, not a daily-driver release.
 
 The companion TWRP device tree for the same tablet is
@@ -86,7 +87,7 @@ device/lenovo/clove_row_wifi/
 | Existing encrypted `/data` (stock Beanpod crypto) | **decrypts** |
 | Display, SurfaceFlinger, screenshots/transitions | works |
 | Wi-Fi scan (2.4 + 5 GHz) | **works** |
-| Wi-Fi connect | untested |
+| Wi-Fi connect (5 GHz, WPA3-SAE), DHCP, DNS, traffic | **works** |
 | Bluetooth | kernel modules load; untested |
 | Audio, camera, sensors, GPS | untested |
 | Suspend / battery drain | untested |

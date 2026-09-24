@@ -1,0 +1,20 @@
+#
+# vendor.prop for clove_row_wifi
+#
+# NOTE: ro.build.* cannot be overridden from a vendor prop file (partition
+# property rules); those come from the system build fingerprint. Keep only
+# genuine vendor/runtime knobs here.
+
+# Crypto — stock userdata is FBE v2 + metadata (dm-default-key), hardware-bound
+# to Beanpod KeyMint/Keymaster 4.1. Declare the encryption state so vold runs
+# FBE init instead of skipping it.
+ro.crypto.state=encrypted
+ro.crypto.type=file
+ro.crypto.metadata.enabled=true
+ro.crypto.volume.filenames_mode=aes-256-cts
+ro.crypto.dm_default_key.options_format.version=2
+
+# Display
+ro.surface_flinger.max_frame_buffer_acquired_buffers=3
+
+# Media / codecs are provided by stock vendor blobs

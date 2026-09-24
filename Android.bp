@@ -1,0 +1,22 @@
+//
+// SPDX-FileCopyrightText: The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+soong_namespace {
+}
+
+// /system/lib/modules -> /system_dlkm/lib/modules
+//
+// Stock's system image carries this link. The build only creates it when
+// BOARD_USES_SYSTEM_DLKMIMAGE is set, which would also make it build a
+// system_dlkm image -- but this port keeps stock system_dlkm, so the link is
+// installed on its own here. Without it, vendor modules.dep entries such as
+//   wlan_drv_gen4m_6768.ko: cfg80211.ko ... /system/lib/modules/rfkill.ko
+// can't resolve, cfg80211 never loads, and Wi-Fi fails with
+// "Unknown symbol cfg80211_*" (no wlan0).
+install_symlink {
+    name: "clove_system_lib_modules_symlink",
+    installed_location: "lib/modules",
+    symlink_target: "/system_dlkm/lib/modules",
+}

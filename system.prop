@@ -1,0 +1,12 @@
+#
+# system.prop for clove_row_wifi
+#
+# NOTE: do NOT set ro.secure / ro.adb.secure here. The build variant already
+# assigns them and gen_build_prop hard-fails on duplicate sysprop assignments:
+#   error: found duplicate sysprop assignments: ro.adb.secure=0 / =1
+
+# Keep a larger logd ring buffer so post-mortem logcat pulls are useful.
+ro.logd.size=4M
+
+ro.surface_flinger.protected_contents=true
+debug.sf.latch_unsignaled=1

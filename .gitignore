@@ -1,0 +1,6 @@
+*.pyc
+__pycache__/
+
+# Proprietary ILITEK touch firmware pulled from stock. Not referenced by the
+# build; kept locally for reference only, not redistributed.
+prebuilt/firmware/

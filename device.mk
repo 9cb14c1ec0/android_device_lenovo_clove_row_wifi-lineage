@@ -2,10 +2,12 @@
 # SPDX-FileCopyrightText: The LineageOS Project
 # SPDX-License-Identifier: Apache-2.0
 #
-# STRATEGY: this port builds ONLY system, system_ext and product.
-# vendor, vendor_dlkm, odm_dlkm and system_dlkm are kept from stock firmware,
-# because Lenovo released no kernel source and no MediaTek BSP is available.
-# Anything that would populate a vendor image therefore does NOT belong here.
+# STRATEGY: this port builds system, system_ext, product, boot (our own GKI
+# kernel) and vendor_boot (LineageOS recovery). vendor, vendor_dlkm, odm_dlkm,
+# system_dlkm, init_boot and the firmware are stock slot-A prebuilts from
+# vendor/lenovo/clove_row_wifi, shipped unchanged in the full OTA -- no
+# MediaTek BSP is available to rebuild them. Anything that would populate a
+# rebuilt vendor image therefore does NOT belong here.
 #
 
 LOCAL_PATH := device/lenovo/clove_row_wifi
@@ -48,9 +50,11 @@ PRODUCT_PACKAGES += \
     fsck.f2fs
 
 # -- Kernel module path compat -------------------------------------------
-# See Android.bp: /system/lib/modules -> /system_dlkm/lib/modules (Wi-Fi).
-PRODUCT_PACKAGES += \
-    clove_system_lib_modules_symlink
+# /system/lib/modules -> /system_dlkm/lib/modules is REQUIRED: vendor
+# modules.dep references /system/lib/modules/rfkill.ko, and without the link
+# cfg80211 never loads (Wi-Fi: "Unknown symbol cfg80211_*", no wlan0). The
+# build creates it because BOARD_USES_SYSTEM_DLKMIMAGE is set (BoardConfig.mk);
+# do not add a second copy here -- it collides with the build's own rule.
 
 # -- SurfaceFlinger RenderEngine ---------------------------------------------
 # Stock vendor sets debug.renderengine.backend=skiagl (non-threaded). With the
@@ -64,6 +68,12 @@ PRODUCT_PACKAGES += \
 # Product props load after vendor, so this overrides the stock value.
 PRODUCT_PRODUCT_PROPERTIES += \
     debug.renderengine.backend=skiaglthreaded
+
+# -- Recovery -----------------------------------------------------------------
+# ro.hardware is mt8786; stock ships the same file under both platform names.
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/rootdir/etc/init.recovery.mt8786.rc:$(TARGET_COPY_OUT_RECOVERY)/root/init.recovery.mt8786.rc \
+    $(LOCAL_PATH)/rootdir/etc/init.recovery.mt8786.rc:$(TARGET_COPY_OUT_RECOVERY)/root/init.recovery.mt6768.rc
 
 # -- Overlays ------------------------------------------------------------
 DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay
@@ -79,11 +89,9 @@ PRODUCT_SOONG_NAMESPACES += $(LOCAL_PATH)
 #     manifest fragments. Building LineageOS copies would put them on a vendor
 #     image we never produce.
 #
-#   * fstab.mt6768 as a vendor/ramdisk copy. First-stage mount is driven by the
-#     fstab inside the STOCK vendor ramdisk. rootdir/etc/fstab.mt6768 is kept
-#     in this tree only as TARGET_RECOVERY_FSTAB and as documentation of the
-#     stock layout; installing our own copy would either be ignored or fight
-#     the stock first-stage mount.
+#   * fstab.mt6768 as a vendor ramdisk copy from this tree. The first-stage
+#     fstab ships inside the stock platform ramdisk (vendor prebuilts);
+#     rootdir/etc/fstab.mt6768 is that same file, used as TARGET_RECOVERY_FSTAB.
 #
 #   * $(call inherit-product, vendor/lenovo/clove_row_wifi/...-vendor.mk).
 #     extract-files.py can generate that tree, and proprietary-files.txt lists
@@ -92,3 +100,6 @@ PRODUCT_SOONG_NAMESPACES += $(LOCAL_PATH)
 #     switches to rebuilding vendor, or if a specific blob must be relocated
 #     to the system side.
 #
+
+# -- Stock slot-A prebuilts (vendor_boot platform ramdisk) --------------------
+$(call inherit-product, vendor/lenovo/clove_row_wifi/clove_row_wifi-prebuilts.mk)

@@ -1,0 +1,11 @@
+# MediaTek's recovery boot-control HAL (android.hardware.boot-service.mtk_recovery,
+# shipped from the stock recovery ramdisk). Besides the slot metadata in misc it
+# switches the eMMC boot area (preloader_a/b) with a raw MMC_IOC_CMD ioctl on
+# the whole-disk node, which needs CAP_SYS_RAWIO. Platform policy forbids
+# opening unlabelled block_device, hence the stock label for /dev/block/mmcblk0.
+type bootdevice_block_device, dev_type;
+
+allow hal_bootctl_default bootdevice_block_device:blk_file { getattr open read write ioctl };
+allowxperm hal_bootctl_default bootdevice_block_device:blk_file ioctl 0xb300;
+allow hal_bootctl_default self:capability sys_rawio;
+allow hal_bootctl_default rootfs:dir r_dir_perms;

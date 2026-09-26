@@ -1,0 +1,20 @@
+# LineageOS recovery setup for clove_row_wifi, derived from the stock Lenovo
+# recovery's init.recovery.mt8786.rc.
+
+on init
+    # MediaTek USB gadget: without the controller name recovery never brings up
+    # USB, so neither adb nor sideload appear on the host.
+    setprop sys.usb.configfs 1
+    setprop sys.usb.controller "musb-hdrc"
+    setprop sys.usb.ffs.aio_compat 0
+
+on post-fs
+    # The eMMC boot areas hold preloader_a/_b but are not GPT partitions, so
+    # nothing else creates these links. update_engine_sideload needs them to
+    # write the preloader when an OTA is installed from recovery.
+    symlink /dev/block/sda /dev/block/mmcblk0boot0
+    symlink /dev/block/sdb /dev/block/mmcblk0boot1
+    symlink /dev/block/mmcblk0boot0 /dev/block/platform/bootdevice/by-name/preloader_a
+    symlink /dev/block/mmcblk0boot1 /dev/block/platform/bootdevice/by-name/preloader_b
+    symlink /dev/block/mmcblk0boot0 /dev/block/by-name/preloader_a
+    symlink /dev/block/mmcblk0boot1 /dev/block/by-name/preloader_b

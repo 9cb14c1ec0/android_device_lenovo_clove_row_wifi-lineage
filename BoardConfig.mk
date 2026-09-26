@@ -36,7 +36,10 @@ TARGET_BOARD_PLATFORM := mt6768
 TARGET_BOOTLOADER_BOARD_NAME := clove_row_wifi
 TARGET_NO_BOOTLOADER := true
 
-# Kernel — prebuilt stock GKI 6.6 (no source released by Lenovo)
+# Kernel -- our own GKI 6.6 build (Image.gz). Built from AOSP kernel/common
+# 076ac12bde16 (the exact commit of stock GKI ab13715361) with Google's
+# manifest_13715361.xml, plus one commit that trusts the stock build's module
+# signing key so the stock system_dlkm keeps loading. KMI is identical to stock.
 TARGET_NO_KERNEL := false
 TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
 BOARD_PREBUILT_DTBIMAGE_DIR := $(DEVICE_PATH)/prebuilt/dtb
@@ -66,35 +69,50 @@ TARGET_NO_RECOVERY := true
 BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT := true
 BOARD_INCLUDE_RECOVERY_RAMDISK_IN_VENDOR_BOOT := true
 
-# Stock firmware updates all of boot/dtbo/init_boot/vendor*/...; this port only
-# produces the system side, so only those are listed. Adding partitions we do
-# not build makes update_engine demand images that never get generated.
+# Full A/B OTA: every partition that makes up a slot. The vendor side is
+# stock slot-A prebuilts (vendor/lenovo/clove_row_wifi); the firmware entries
+# (preloader ... md1img) come from its radio/ images. Shipping the firmware is
+# not optional: the other slot otherwise keeps older firmware -- including an
+# older TEE -- underneath the newer stock vendor.
 AB_OTA_PARTITIONS += \
+    boot \
+    vendor_boot \
+    dtbo \
+    vbmeta \
+    vbmeta_system \
+    vbmeta_vendor \
+    system \
+    system_ext \
     product \
-    system \
-    system_ext \
-    vbmeta_system
-
-BOARD_PARTIAL_OTA_UPDATE_PARTITIONS_LIST := \
-    system \
-    system_ext \
-    product
+    vendor \
+    vendor_dlkm \
+    odm_dlkm \
+    system_dlkm \
+    preloader \
+    lk \
+    tee \
+    gz \
+    scp \
+    sspm \
+    spmfw \
+    md1img
 
 # Virtual A/B (compression.mk is inherited in the product makefile)
 BOARD_SUPER_PARTITION_METADATA_DEVICE := super
 
 # Dynamic / super partition
 BOARD_SUPER_PARTITION_SIZE := 11811160064
-BOARD_SUPER_PARTITION_GROUPS := clove_dynamic_partitions
-# Only built partitions belong in the group. The stock vendor, vendor_dlkm,
-# odm_dlkm and system_dlkm logical partitions stay in place on the device and
-# are flashed/resized individually via fastbootd.
-BOARD_CLOVE_DYNAMIC_PARTITIONS_PARTITION_LIST := \
+# Same group name and size as stock ("main" -> main_a / main_b in metadata).
+BOARD_SUPER_PARTITION_GROUPS := main
+BOARD_MAIN_PARTITION_LIST := \
     system \
     system_ext \
-    product
-# Max group size = super/2 - overhead (A/B). Leave slack under the 5.9 GiB slot.
-BOARD_CLOVE_DYNAMIC_PARTITIONS_SIZE := 5804453888
+    product \
+    vendor \
+    vendor_dlkm \
+    odm_dlkm \
+    system_dlkm
+BOARD_MAIN_SIZE := 10200547328
 # PRODUCT_USE_DYNAMIC_PARTITIONS is a PRODUCT variable and is already set (and
 # made readonly) by lineage_clove_row_wifi.mk before BoardConfig.mk is parsed.
 # Setting it here is a hard build error -- keep it in the product makefile only.
@@ -103,6 +121,12 @@ BOARD_BUILD_SUPER_IMAGE_BY_DEFAULT := false
 # Static partition image sizes
 BOARD_BOOTIMAGE_PARTITION_SIZE := 33554432
 BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE := 67108864
+# init_boot is BUILT but deliberately NOT in AB_OTA_PARTITIONS. On stock both
+# init_boot partitions are all zeros: Lenovo carries the generic ramdisk
+# (first-stage init + snapuserd) as the "init_boot" fragment of vendor_boot, and
+# boot holds the kernel only. The build puts the generic ramdisk into boot.img
+# unless it is building an init_boot image, so building one is what keeps
+# boot.img kernel-only; leaving it out of the OTA keeps the partition as stock.
 BOARD_INIT_BOOT_IMAGE_PARTITION_SIZE := 8388608
 BOARD_DTBOIMG_PARTITION_SIZE := 8388608
 BOARD_FLASH_BLOCK_SIZE := 262144
@@ -116,11 +140,6 @@ BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE := erofs
 BOARD_EROFS_COMPRESSOR := lz4hc,9
 BOARD_EROFS_PCLUSTER_SIZE := 65536
 
-# Only the partitions this port actually BUILDS are declared here. Setting
-# TARGET_COPY_OUT_VENDOR_DLKM/ODM_DLKM/SYSTEM_DLKM tells the build to produce
-# those images and then demands a filesystem type for each -- but vendor and
-# all three *_dlkm partitions are kept from stock firmware, so they must stay
-# unset and keep their defaults.
 TARGET_COPY_OUT_SYSTEM := system
 TARGET_COPY_OUT_SYSTEM_EXT := system_ext
 TARGET_COPY_OUT_PRODUCT := product
@@ -133,12 +152,35 @@ TARGET_COPY_OUT_PRODUCT := product
 # system_ext, fails on vendor, and the device bootloops with
 #   Kernel panic - not syncing: Attempted to kill init!
 # This cost a full flash/bootloop/forensics cycle to find. Do not remove it.
-#
-# Setting it to 'vendor' implies BOARD_USES_VENDORIMAGE, which in turn demands
-# a filesystem type, so declare one. The resulting vendor.img is simply not
-# used -- the stock vendor partition is kept (see device.mk).
 TARGET_COPY_OUT_VENDOR := vendor
 BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := erofs
+
+# The vendor side ships as stock slot-A prebuilts (not rebuilt from blobs).
+CLOVE_PREBUILT_PATH := vendor/lenovo/clove_row_wifi
+BOARD_PREBUILT_VENDORIMAGE := $(CLOVE_PREBUILT_PATH)/images/vendor.img
+TARGET_COPY_OUT_VENDOR_DLKM := vendor_dlkm
+TARGET_COPY_OUT_ODM_DLKM := odm_dlkm
+TARGET_COPY_OUT_SYSTEM_DLKM := system_dlkm
+BOARD_USES_VENDOR_DLKMIMAGE := true
+BOARD_USES_ODM_DLKMIMAGE := true
+BOARD_USES_SYSTEM_DLKMIMAGE := true
+BOARD_PREBUILT_VENDOR_DLKMIMAGE := $(CLOVE_PREBUILT_PATH)/images/vendor_dlkm.img
+BOARD_PREBUILT_ODM_DLKMIMAGE := $(CLOVE_PREBUILT_PATH)/images/odm_dlkm.img
+BOARD_PREBUILT_SYSTEM_DLKMIMAGE := $(CLOVE_PREBUILT_PATH)/images/system_dlkm.img
+
+# vendor_boot = [platform: stock, from PRODUCT_COPY_FILES] + [recovery: built
+# LineageOS recovery] + [init_boot: stock prebuilt fragment], the same three
+# fragments in the same order as stock.
+#
+# NOTE: this LK loads ALL vendor ramdisk fragments on every boot, including
+# "recovery", and the device's real first-stage fstab is fstab.mt8786 -- which
+# Lenovo ships in the recovery fragment. The prebuilt platform fragment therefore
+# also carries first_stage_ramdisk/fstab.mt8786{,dm}; without them any recovery
+# other than Lenovo's/TWRP's makes first-stage init panic ("failed to read
+# default fstab for first stage mount"). See vendor/lenovo/clove_row_wifi/README.md.
+BOARD_VENDOR_RAMDISK_FRAGMENTS := init_boot
+BOARD_VENDOR_RAMDISK_FRAGMENT.init_boot.PREBUILT := $(CLOVE_PREBUILT_PATH)/images/vendor_ramdisk_init_boot.lz4
+BOARD_VENDOR_RAMDISK_FRAGMENT.init_boot.MKBOOTIMG_ARGS := --ramdisk_type PLATFORM
 
 # Metadata encryption partition (dm-default-key on userdata)
 BOARD_USES_METADATA_PARTITION := true
@@ -177,6 +219,13 @@ BUILD_BROKEN_PREBUILT_ELF_FILES := true
 # Only the system side is extended, for LineageOS-specific additions:
 SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/private
 #
+# EXCEPTION to the rule above: vendor policy for LineageOS RECOVERY. Vendor
+# policy built here never reaches the device's vendor partition (it is a stock
+# prebuilt), but it IS compiled into the recovery ramdisk's sepolicy -- which is
+# exactly where MediaTek's recovery boot-control HAL needs rules (labelled misc
+# and whole-disk eMMC nodes, the boot-area switch ioctl). See sepolicy/recovery.
+BOARD_VENDOR_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/recovery
+#
 # NOTE: our rebuilt plat_sepolicy.cil will not match the vendor's
 # precompiled_sepolicy.plat_sepolicy_and_mapping.sha256
 # (201d593e465d235d5546e96d8720b6a4ba091257bdeb9e79d0f8825223ea2763), so init
@@ -211,6 +260,12 @@ BOARD_AVB_VBMETA_SYSTEM_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
 BOARD_AVB_VBMETA_SYSTEM_ALGORITHM := SHA256_RSA4096
 BOARD_AVB_VBMETA_SYSTEM_ROLLBACK_INDEX := 0
 BOARD_AVB_VBMETA_SYSTEM_ROLLBACK_INDEX_LOCATION := 1
+
+BOARD_AVB_VBMETA_VENDOR := vendor
+BOARD_AVB_VBMETA_VENDOR_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
+BOARD_AVB_VBMETA_VENDOR_ALGORITHM := SHA256_RSA4096
+BOARD_AVB_VBMETA_VENDOR_ROLLBACK_INDEX := 0
+BOARD_AVB_VBMETA_VENDOR_ROLLBACK_INDEX_LOCATION := 4
 
 # Inherit proprietary blob board config (generated by extract-files.py)
 -include vendor/lenovo/clove_row_wifi/BoardConfigVendor.mk

@@ -89,10 +89,6 @@ PRODUCT_SOONG_NAMESPACES += $(LOCAL_PATH)
 #     manifest fragments. Building LineageOS copies would put them on a vendor
 #     image we never produce.
 #
-#   * fstab.mt6768 as a vendor ramdisk copy from this tree. The first-stage
-#     fstab ships inside the stock platform ramdisk (vendor prebuilts);
-#     rootdir/etc/fstab.mt6768 is that same file, used as TARGET_RECOVERY_FSTAB.
-#
 #   * $(call inherit-product, vendor/lenovo/clove_row_wifi/...-vendor.mk).
 #     extract-files.py can generate that tree, and proprietary-files.txt lists
 #     all 2291 stock blobs, but under this strategy the blobs already ship on
@@ -100,6 +96,15 @@ PRODUCT_SOONG_NAMESPACES += $(LOCAL_PATH)
 #     switches to rebuilding vendor, or if a specific blob must be relocated
 #     to the system side.
 #
+
+# First-stage fstab (vendor_boot platform ramdisk). LK passes
+# androidboot.hardware=mt8786, so first-stage init reads fstab.mt8786; Lenovo
+# ships the same file under all three names. fstab.mt8786dm is the variant with
+# the dm-userdata (lenovobackup) layout.
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/rootdir/etc/fstab.mt6768:$(TARGET_COPY_OUT_VENDOR_RAMDISK)/first_stage_ramdisk/fstab.mt6768 \
+    $(LOCAL_PATH)/rootdir/etc/fstab.mt6768:$(TARGET_COPY_OUT_VENDOR_RAMDISK)/first_stage_ramdisk/fstab.mt8786 \
+    $(LOCAL_PATH)/rootdir/etc/fstab.mt8786dm:$(TARGET_COPY_OUT_VENDOR_RAMDISK)/first_stage_ramdisk/fstab.mt8786dm
 
 # -- Stock slot-A prebuilts (vendor_boot platform ramdisk) --------------------
 $(call inherit-product, vendor/lenovo/clove_row_wifi/clove_row_wifi-prebuilts.mk)

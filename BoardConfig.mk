@@ -36,15 +36,25 @@ TARGET_BOARD_PLATFORM := mt6768
 TARGET_BOOTLOADER_BOARD_NAME := clove_row_wifi
 TARGET_NO_BOOTLOADER := true
 
-# Kernel -- our own GKI 6.6 build (Image.gz). Built from AOSP kernel/common
-# 076ac12bde16 (the exact commit of stock GKI ab13715361) with Google's
-# manifest_13715361.xml, plus one commit that trusts the stock build's module
-# signing key so the stock system_dlkm keeps loading. KMI is identical to stock.
+# Kernel: prebuilt, from device/lenovo/clove_row_wifi-kernel (see its README).
+# Image.gz and system_dlkm modules are an unmodified AOSP GKI android15-6.6
+# build; vendor_dlkm / vendor_ramdisk modules, DTB and DTBO are stock Lenovo.
+KERNEL_PATH := $(DEVICE_PATH)-kernel
 TARGET_NO_KERNEL := false
-TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
-BOARD_PREBUILT_DTBIMAGE_DIR := $(DEVICE_PATH)/prebuilt/dtb
+TARGET_PREBUILT_KERNEL := $(KERNEL_PATH)/Image.gz
+TARGET_PREBUILT_KERNEL_HEADERS := $(KERNEL_PATH)/kernel-uapi-headers.tar.gz
+BOARD_PREBUILT_DTBIMAGE_DIR := $(KERNEL_PATH)/dtb
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
-BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img
+BOARD_PREBUILT_DTBOIMAGE := $(KERNEL_PATH)/dtbo.img
+
+# Kernel modules
+BOARD_SYSTEM_KERNEL_MODULES := $(wildcard $(KERNEL_PATH)/modules/system_dlkm/*.ko)
+BOARD_SYSTEM_KERNEL_MODULES_LOAD := $(strip $(shell cat $(KERNEL_PATH)/modules/system_dlkm/modules.load))
+BOARD_VENDOR_KERNEL_MODULES := $(wildcard $(KERNEL_PATH)/modules/vendor_dlkm/*.ko)
+BOARD_VENDOR_KERNEL_MODULES_LOAD := $(strip $(shell cat $(KERNEL_PATH)/modules/vendor_dlkm/modules.load))
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(wildcard $(KERNEL_PATH)/modules/vendor_ramdisk/*.ko)
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD := $(strip $(shell cat $(KERNEL_PATH)/modules/vendor_ramdisk/modules.load))
+BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD := $(strip $(shell cat $(KERNEL_PATH)/modules/vendor_ramdisk/modules.load.recovery))
 
 # Stock Android 15 GKI boot image geometry (header v4, 4 KiB pages)
 BOARD_BOOT_HEADER_VERSION := 4
@@ -69,11 +79,9 @@ TARGET_NO_RECOVERY := true
 BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT := true
 BOARD_INCLUDE_RECOVERY_RAMDISK_IN_VENDOR_BOOT := true
 
-# Full A/B OTA: every partition that makes up a slot. The vendor side is
-# stock slot-A prebuilts (vendor/lenovo/clove_row_wifi); the firmware entries
-# (preloader ... md1img) come from its radio/ images. Shipping the firmware is
-# not optional: the other slot otherwise keeps older firmware -- including an
-# older TEE -- underneath the newer stock vendor.
+# Full A/B OTA: every partition LineageOS builds. Firmware (preloader, lk,
+# tee, gz, scp, sspm, spmfw, md1img) is NOT shipped, as usual for LineageOS:
+# both slots must already carry the same stock firmware (see README).
 AB_OTA_PARTITIONS += \
     boot \
     vendor_boot \
@@ -87,15 +95,7 @@ AB_OTA_PARTITIONS += \
     vendor \
     vendor_dlkm \
     odm_dlkm \
-    system_dlkm \
-    preloader \
-    lk \
-    tee \
-    gz \
-    scp \
-    sspm \
-    spmfw \
-    md1img
+    system_dlkm
 
 # Virtual A/B (compression.mk is inherited in the product makefile)
 BOARD_SUPER_PARTITION_METADATA_DEVICE := super
@@ -155,7 +155,7 @@ TARGET_COPY_OUT_PRODUCT := product
 TARGET_COPY_OUT_VENDOR := vendor
 BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := erofs
 
-# The vendor side ships as stock slot-A prebuilts (not rebuilt from blobs).
+# The vendor partition still ships as a stock slot-A prebuilt (for now).
 CLOVE_PREBUILT_PATH := vendor/lenovo/clove_row_wifi
 BOARD_PREBUILT_VENDORIMAGE := $(CLOVE_PREBUILT_PATH)/images/vendor.img
 TARGET_COPY_OUT_VENDOR_DLKM := vendor_dlkm
@@ -164,9 +164,9 @@ TARGET_COPY_OUT_SYSTEM_DLKM := system_dlkm
 BOARD_USES_VENDOR_DLKMIMAGE := true
 BOARD_USES_ODM_DLKMIMAGE := true
 BOARD_USES_SYSTEM_DLKMIMAGE := true
-BOARD_PREBUILT_VENDOR_DLKMIMAGE := $(CLOVE_PREBUILT_PATH)/images/vendor_dlkm.img
-BOARD_PREBUILT_ODM_DLKMIMAGE := $(CLOVE_PREBUILT_PATH)/images/odm_dlkm.img
-BOARD_PREBUILT_SYSTEM_DLKMIMAGE := $(CLOVE_PREBUILT_PATH)/images/system_dlkm.img
+BOARD_VENDOR_DLKMIMAGE_FILE_SYSTEM_TYPE := erofs
+BOARD_ODM_DLKMIMAGE_FILE_SYSTEM_TYPE := erofs
+BOARD_SYSTEM_DLKMIMAGE_FILE_SYSTEM_TYPE := erofs
 
 # vendor_boot = [platform: stock, from PRODUCT_COPY_FILES] + [recovery: built
 # LineageOS recovery] + [init_boot: stock prebuilt fragment], the same three

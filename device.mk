@@ -97,6 +97,16 @@ PRODUCT_SOONG_NAMESPACES += $(LOCAL_PATH)
 #     to the system side.
 #
 
+# Boot control. MediaTek's HAL (bootctrl/, built from source) rather than the
+# AOSP default: switching slots here also switches the eMMC boot area
+# (preloader_a/b). LineageOS recovery has no boot HAL of its own, and without
+# one update_engine_sideload cannot install anything.
+PRODUCT_PACKAGES += \
+    android.hardware.boot-service.mediatek_recovery
+
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/bootctrl/android.hardware.boot-service.mediatek.xml:$(TARGET_COPY_OUT_RECOVERY)/root/system/etc/vintf/manifest/android.hardware.boot-service.mediatek.xml
+
 # First-stage fstab (vendor_boot platform ramdisk). LK passes
 # androidboot.hardware=mt8786, so first-stage init reads fstab.mt8786; Lenovo
 # ships the same file under all three names. fstab.mt8786dm is the variant with

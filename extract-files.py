@@ -3,18 +3,16 @@
 # SPDX-FileCopyrightText: The LineageOS Project
 # SPDX-License-Identifier: Apache-2.0
 #
-# Extracts proprietary blobs for clove_row_wifi from a stock firmware source.
+# Extracts proprietary blobs for clove_row_wifi into vendor/lenovo/clove_row_wifi.
 #
-# IMPORTANT: get the source images with ./pull-stock-images.sh (live adb pull
-# from the merged Virtual A/B mapper nodes on a TWRP-booted device). Do NOT
-# use an lpunpack of super.bin: that gives the pre-snapshot BASE image, whose
-# COW-updated inodes read back as zero, so fsck.erofs dies with
-# "bogus i_mode (0)" and /vendor/etc + /vendor/firmware are unreadable.
+# Source: a directory holding the extracted stock partitions, e.g.
+#   <dump>/vendor/...
+# made with fsck.erofs --extract=<dump>/vendor vendor.img from a stock
+# firmware image, or pulled from a device running stock with
+# ./pull-stock-images.sh (see there for why lpunpack of a live super dump
+# does not work on this Virtual A/B device). Then:
+#   ./extract-files.py <dump>
 #
-#   ./pull-stock-images.sh stock_images
-#   for p in vendor vendor_dlkm odm_dlkm system_dlkm; do \
-#       fsck.erofs --extract=extracted/$p stock_images/${p}_a.img; done
-#   ./extract-files.py extracted
 
 from extract_utils.fixups_blob import (
     blob_fixup,

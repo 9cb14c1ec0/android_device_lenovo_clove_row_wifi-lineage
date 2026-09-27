@@ -2,13 +2,6 @@
 # SPDX-FileCopyrightText: The LineageOS Project
 # SPDX-License-Identifier: Apache-2.0
 #
-# STRATEGY: this port builds system, system_ext, product, boot (our own GKI
-# kernel) and vendor_boot (LineageOS recovery). vendor, vendor_dlkm, odm_dlkm,
-# system_dlkm, init_boot and the firmware are stock slot-A prebuilts from
-# vendor/lenovo/clove_row_wifi, shipped unchanged in the full OTA -- no
-# MediaTek BSP is available to rebuild them. Anything that would populate a
-# rebuilt vendor image therefore does NOT belong here.
-#
 
 LOCAL_PATH := device/lenovo/clove_row_wifi
 

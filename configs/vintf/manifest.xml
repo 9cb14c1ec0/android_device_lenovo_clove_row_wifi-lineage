@@ -1,16 +1,7 @@
 <!--
-    Device VINTF manifest for clove_row_wifi, taken VERBATIM from the stock
-    Lenovo Android 15 vendor partition (pulled live over adb from
-    /dev/block/mapper/vendor_a, slot A).
-
-    NOTE: target-level is 6 (FCM 6 / Android 12), not the Android 15 default.
-    MediaTek froze the vendor interface at FCM 6 on this platform. Because this
-    port KEEPS the stock vendor partition, the framework must remain compatible
-    with FCM 6 -- do not "modernise" this value.
-
-    38 manifest fragments from /vendor/etc/vintf/manifest/ are kept alongside
-    in manifest_fragments/ for reference; they ship inside the stock vendor
-    image and are NOT rebuilt by this tree.
+    Device VINTF manifest for clove_row_wifi: the stock Lenovo base manifest
+    (HALs without their own fragment). target-level is 6 (FCM 6), as on stock;
+    the vendor blobs are frozen at that level.
 -->
 <!--
     Input:

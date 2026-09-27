@@ -34,13 +34,5 @@ PRODUCT_GMS_CLIENTID_BASE := android-lenovo
 
 PRODUCT_USE_DYNAMIC_PARTITIONS := true
 
-# Match the stock build fingerprint so the vendor/TEE (Beanpod) sees the
-# firmware it expects. Stock: Android 15 / AP3A.240905.015.A2.
-# PRODUCT_BUILD_PROP_OVERRIDES keys must exist in Soong's product_config.json.
-# The make-style names (TARGET_DEVICE, PRODUCT_NAME, PRIVATE_BUILD_DESC) are a
-# pre-Android-14 idiom and are rejected outright:
-#   Key "TARGET_DEVICE" isn't a valid prop override
-# Valid keys here are Soong-style (DeviceName, ProductModel, ProductBrand...),
-# and PRODUCT_DEVICE/MODEL/BRAND above already set those correctly, so no
-# override block is needed. BUILD_FINGERPRINT alone pins the fingerprint.
+# Stock build fingerprint (Android 15 / AP3A.240905.015.A2).
 BUILD_FINGERPRINT := Lenovo/TB305FU/TB305FU:15/AP3A.240905.015.A2/__ROW:user/release-keys

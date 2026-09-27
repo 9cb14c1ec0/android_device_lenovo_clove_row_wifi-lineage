@@ -5,12 +5,6 @@
 # LineageOS 22.2 (Android 15) board config for the Lenovo Tab One
 # (TB305FU / clove_row_wifi). MediaTek MT6768/MT8786 family, GKI 6.6 kernel.
 #
-# Lenovo has not released matching kernel source, so this tree ships the STOCK
-# GKI kernel Image, DTB and DTBO as prebuilts and reuses the stock vendor,
-# vendor_dlkm, odm_dlkm and system_dlkm partitions. LineageOS builds only the
-# system / system_ext / product side. See README.md for the full strategy and
-# the constraints inherited from the TWRP port.
-#
 
 DEVICE_PATH := device/lenovo/clove_row_wifi
 
@@ -31,7 +25,7 @@ TARGET_2ND_CPU_VARIANT_RUNTIME := cortex-a53
 
 TARGET_SUPPORTS_64_BIT_APPS := true
 
-# API levels: the stock vendor is frozen at API 30 (GRF), like stock
+# The vendor blobs are frozen at API 30 (GRF), as on stock
 # (ro.board.first_api_level=30).
 BOARD_SHIPPING_API_LEVEL := 30
 
@@ -186,7 +180,6 @@ BUILD_BROKEN_PREBUILT_ELF_FILES := true
 # SELinux
 include device/mediatek/sepolicy_vndr/SEPolicy.mk
 BOARD_VENDOR_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/vendor
-SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/private
 
 # Security patch level (stock ZUI 17 / Android 15)
 VENDOR_SECURITY_PATCH := 2026-05-05
@@ -202,9 +195,8 @@ DEVICE_MATRIX_FILE := $(DEVICE_PATH)/configs/vintf/compatibility_matrix.xml
 DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE += $(DEVICE_PATH)/configs/vintf/framework_compatibility_matrix.xml
 
 # Verified Boot
-# Stock LK enforces AVB against signed vbmeta. Custom builds require an
-# LK dm-verity patch (see TWRP notes) or a locked/patched vbmeta. Use AOSP
-# test keys for now; flashing strategy is documented in README.md.
+# The stock LK rejects any vbmeta not signed by Lenovo, even when unlocked;
+# LineageOS needs the patched LK described in README.md.
 BOARD_AVB_ENABLE := true
 BOARD_AVB_MAKE_VBMETA_IMAGE_ARGS += --flags 3
 BOARD_AVB_ALGORITHM := SHA256_RSA4096

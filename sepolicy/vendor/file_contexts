@@ -49,7 +49,7 @@
 /(vendor|system/vendor)/bin/hw/vendor\.mediatek\.hardware\.gpuserv-service                  u:object_r:mtk_hal_gpuserv_exec:s0
 /(vendor|system/vendor)/bin/hw/vendor\.mediatek\.hardware\.pq_aidl-service u:object_r:mtk_hal_pq_exec:s0
 /(vendor|system/vendor)/bin/hw/vendor\.mediatek\.hardware\.mmagent-service u:object_r:mtk_hal_mmagent_exec:s0
-/(vendor|system/vendor)/bin/hw/android\.hardware\.sensors-service\.multihal                 u:object_r:mtk_hal_sensors_exec:s0
+/(vendor|system/vendor)/bin/hw/android\.hardware\.sensors-service\.multihal                 u:object_r:hal_sensors_default_exec:s0
 /(vendor|system/vendor)/bin/hw/vendor\.mediatek\.hardware\.mmlpq@V1-service u:object_r:mtk_hal_mmlpq_exec:s0
 /(system\/vendor|vendor)/bin/hw/vendor\.mediatek\.hardware\.hdmi@1\.1-service u:object_r:mtk_hal_hdmi_exec:s0
 /(system\/vendor|vendor)/bin/hw/vendor\.mediatek\.hardware\.hdmi@1\.2-service u:object_r:mtk_hal_hdmi_exec:s0
@@ -85,7 +85,7 @@
 /(vendor|system/vendor)/bin/hw/android\.hardware\.neuralnetworks-shim-service-mtk-lazy              u:object_r:mtk_hal_neuralnetworks_exec:s0
 /(vendor|system/vendor)/bin/hw/android\.hardware\.security\.keymint@2\.0-service\.beanpod u:object_r:hal_keymint_default_exec:s0
 /(vendor|system/vendor)/bin/hw/android\.hardware\.security\.keymint@3\.0-service\.beanpod u:object_r:hal_keymint_default_exec:s0
-/(vendor|system/vendor)/bin/hw/android\.hardware\.sensors@2\.1-service\.multihal-mediatek   u:object_r:mtk_hal_sensors_exec:s0
+/(vendor|system/vendor)/bin/hw/android\.hardware\.sensors@2\.1-service\.multihal-mediatek   u:object_r:hal_sensors_default_exec:s0
 /(system\/vendor|vendor)/bin/hw/vendor\.mediatek\.hardware\.hdcpwifidisplay-service.optee u:object_r:mtk_hal_hdcpwifidisplay_exec:s0
 /(vendor|system/vendor)/bin/hw/android\.hardware\.biometrics\.fingerprint-service\.example u:object_r:hal_fingerprint_default_exec:s0
 /(vendor|system/vendor)/bin/hw/android\.hardware\.neuralnetworks-shim-service-mtk-legacy            u:object_r:mtk_hal_neuralnetworks_exec:s0

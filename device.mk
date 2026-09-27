@@ -76,32 +76,19 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/rootdir/etc/init.recovery.mt8786.rc:$(TARGET_COPY_OUT_RECOVERY)/root/init.recovery.mt6768.rc
 
 # -- Overlays ------------------------------------------------------------
-DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay
+PRODUCT_PACKAGES += \
+    FrameworksResOverlayClove \
+    WifiResOverlayClove
 
 # -- Soong namespace -----------------------------------------------------
 PRODUCT_SOONG_NAMESPACES += $(LOCAL_PATH)
-
-#
-# Intentionally NOT here, and why:
-#
-#   * Vendor HAL services (boot@1.2, health@2.1, sensors, wifi, audio, ...).
-#     The stock vendor partition ships 47 HAL service binaries plus 38 VINTF
-#     manifest fragments. Building LineageOS copies would put them on a vendor
-#     image we never produce.
-#
-#   * $(call inherit-product, vendor/lenovo/clove_row_wifi/...-vendor.mk).
-#     extract-files.py can generate that tree, and proprietary-files.txt lists
-#     all 2291 stock blobs, but under this strategy the blobs already ship on
-#     the retained stock vendor partition. Inherit it only if the port later
-#     switches to rebuilding vendor, or if a specific blob must be relocated
-#     to the system side.
-#
 
 # Boot control. MediaTek's HAL (bootctrl/, built from source) rather than the
 # AOSP default: switching slots here also switches the eMMC boot area
 # (preloader_a/b). LineageOS recovery has no boot HAL of its own, and without
 # one update_engine_sideload cannot install anything.
 PRODUCT_PACKAGES += \
+    android.hardware.boot-service.mediatek \
     android.hardware.boot-service.mediatek_recovery
 
 PRODUCT_COPY_FILES += \
@@ -116,5 +103,119 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/rootdir/etc/fstab.mt6768:$(TARGET_COPY_OUT_VENDOR_RAMDISK)/first_stage_ramdisk/fstab.mt8786 \
     $(LOCAL_PATH)/rootdir/etc/fstab.mt8786dm:$(TARGET_COPY_OUT_VENDOR_RAMDISK)/first_stage_ramdisk/fstab.mt8786dm
 
-# -- Stock slot-A prebuilts (vendor_boot platform ramdisk) --------------------
-$(call inherit-product, vendor/lenovo/clove_row_wifi/clove_row_wifi-prebuilts.mk)
+# -- Init / fstab (vendor) ------------------------------------------------------
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/rootdir/etc/fstab.enableswap:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.enableswap \
+    $(LOCAL_PATH)/rootdir/etc/fstab.mt6768:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.mt6768 \
+    $(LOCAL_PATH)/rootdir/etc/fstab.mt6768:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.mt8786 \
+    $(LOCAL_PATH)/rootdir/etc/fstab.mt8786dm:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.mt6768dm \
+    $(LOCAL_PATH)/rootdir/etc/fstab.mt8786dm:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.mt8786dm \
+    $(LOCAL_PATH)/rootdir/etc/fstab.zram_wb:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.zram_wb \
+    $(LOCAL_PATH)/rootdir/etc/init.insmod.mt8786.cfg:$(TARGET_COPY_OUT_VENDOR)/etc/init.insmod.mt8786.cfg \
+    $(LOCAL_PATH)/rootdir/etc/init.insmod.sh:$(TARGET_COPY_OUT_VENDOR)/bin/init.insmod.sh \
+    $(LOCAL_PATH)/rootdir/etc/ueventd.mt8786.rc:$(TARGET_COPY_OUT_VENDOR)/etc/ueventd.rc
+
+PRODUCT_COPY_FILES += \
+    $(foreach f,init.aee.rc init.ago.rc init.cgroup.rc init.connectivity.common.rc \
+        init.connectivity.rc init_connectivity.rc init.mt6768.usb.rc init.mt8786.rc \
+        init.mtkgki.rc init.project.rc init.sensor_1_0.rc,\
+        $(LOCAL_PATH)/rootdir/etc/$(f):$(TARGET_COPY_OUT_VENDOR)/etc/init/hw/$(f))
+
+# -- Permissions / hardware features ---------------------------------------------
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.audio.low_latency.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.audio.low_latency.xml \
+    frameworks/native/data/etc/android.hardware.bluetooth.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth.xml \
+    frameworks/native/data/etc/android.hardware.bluetooth_le.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth_le.xml \
+    frameworks/native/data/etc/android.hardware.faketouch.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.faketouch.xml \
+    frameworks/native/data/etc/android.hardware.location.gps.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.location.gps.xml \
+    frameworks/native/data/etc/android.hardware.opengles.aep.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.opengles.aep.xml \
+    frameworks/native/data/etc/android.hardware.sensor.accelerometer.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.accelerometer.xml \
+    frameworks/native/data/etc/android.hardware.sensor.light.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.light.xml \
+    frameworks/native/data/etc/android.hardware.sensor.proximity.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.proximity.xml \
+    frameworks/native/data/etc/android.hardware.sensor.stepcounter.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.stepcounter.xml \
+    frameworks/native/data/etc/android.hardware.sensor.stepdetector.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.stepdetector.xml \
+    frameworks/native/data/etc/android.hardware.touchscreen.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.touchscreen.xml \
+    frameworks/native/data/etc/android.hardware.touchscreen.multitouch.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.touchscreen.multitouch.xml \
+    frameworks/native/data/etc/android.hardware.touchscreen.multitouch.distinct.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.touchscreen.multitouch.distinct.xml \
+    frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
+    frameworks/native/data/etc/android.hardware.usb.accessory.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.usb.accessory.xml \
+    frameworks/native/data/etc/android.hardware.usb.host.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.usb.host.xml \
+    frameworks/native/data/etc/android.hardware.vulkan.compute-0.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.vulkan.compute-0.xml \
+    frameworks/native/data/etc/android.hardware.vulkan.level-1.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.vulkan.level-1.xml \
+    frameworks/native/data/etc/android.hardware.vulkan.version-1_3.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.vulkan.version-1_3.xml \
+    frameworks/native/data/etc/android.hardware.wifi.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.xml \
+    frameworks/native/data/etc/android.hardware.wifi.direct.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.direct.xml \
+    frameworks/native/data/etc/android.hardware.wifi.passpoint.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.passpoint.xml \
+    frameworks/native/data/etc/android.software.ipsec_tunnels.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.ipsec_tunnels.xml \
+    frameworks/native/data/etc/android.software.midi.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.midi.xml \
+    frameworks/native/data/etc/android.software.verified_boot.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.verified_boot.xml \
+    $(LOCAL_PATH)/configs/permissions/android.hardware.camera.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.xml \
+    $(LOCAL_PATH)/configs/permissions/android.hardware.microphone.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.microphone.xml \
+    $(LOCAL_PATH)/configs/permissions/android.software.opengles.deqp.level.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.opengles.deqp.level.xml \
+    $(LOCAL_PATH)/configs/permissions/android.software.vulkan.deqp.level.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.vulkan.deqp.level.xml \
+    $(LOCAL_PATH)/configs/permissions/handheld_core_hardware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/handheld_core_hardware.xml
+
+PRODUCT_PACKAGES += \
+    android.hardware.hardware_keystore.km41.xml
+
+# -- HALs and services built from source --------------------------------------
+# Audio
+PRODUCT_PACKAGES += \
+    audio.bluetooth.default \
+    audio.r_submix.default \
+    audio.usb.default \
+    audio_policy.stub
+
+PRODUCT_PACKAGES += \
+    libaecsw \
+    libagc1sw \
+    libagc2sw \
+    libbassboostsw \
+    libbundleaidl \
+    libdownmixaidl \
+    libdynamicsprocessingaidl \
+    libequalizersw \
+    libextensioneffect \
+    libhapticgeneratoraidl \
+    libloudnessenhanceraidl \
+    libnssw \
+    libpreprocessingaidl \
+    libpresetreverbsw \
+    libreverbaidl \
+    libspatializersw \
+    libvirtualizersw \
+    libvisualizeraidl \
+    libvolumesw
+
+# DRM
+PRODUCT_PACKAGES += \
+    android.hardware.drm-service.clearkey
+
+# Health
+PRODUCT_PACKAGES += \
+    android.hardware.health-service.mediatek \
+    android.hardware.health-service.mediatek-recovery
+
+# Sensors (the sub-HALs listed in /vendor/etc/sensors/hals.conf are blobs)
+PRODUCT_PACKAGES += \
+    android.hardware.sensors-service.multihal \
+    sensors.dynamic_sensor_hal
+
+# VNDK
+PRODUCT_PACKAGES += \
+    vndservicemanager
+
+# Wi-Fi: AOSP service, loading Lenovo's libwifi-hal-mtk.so as a vendor HAL
+PRODUCT_PACKAGES += \
+    android.hardware.wifi-service \
+    hostapd \
+    wpa_supplicant
+
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/wifi/libwifi-hal-mtk.xml:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/vendor_hals/libwifi-hal-mtk.xml
+
+PRODUCT_SOONG_NAMESPACES += \
+    hardware/mediatek
+
+# -- Proprietary files -------------------------------------------------------
+$(call inherit-product, vendor/lenovo/clove_row_wifi/clove_row_wifi-vendor.mk)

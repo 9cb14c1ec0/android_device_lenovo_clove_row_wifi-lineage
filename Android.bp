@@ -5,3 +5,11 @@
 
 soong_namespace {
 }
+
+prebuilt_hidl_interfaces {
+    name: "hidl_vendor_mediatek_hardware_aee_interface",
+    interfaces: [
+        "vendor.mediatek.hardware.aee@1.0::IAee",
+        "vendor.mediatek.hardware.aee@1.1::IAee",
+    ],
+}

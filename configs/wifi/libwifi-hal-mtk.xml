@@ -1,0 +1,12 @@
+<!--
+     SPDX-FileCopyrightText: The LineageOS Project
+     SPDX-License-Identifier: Apache-2.0
+
+     Lenovo's MediaTek Wi-Fi HAL is built against the Android 15 wifi_hal.h,
+     so the AOSP service loads it directly (libwifi-hal-wrapper targets the
+     older layout).
+-->
+<WifiVendorHal version="1">
+    <path>/vendor/lib64/libwifi-hal-mtk.so</path>
+    <primary>1</primary>
+</WifiVendorHal>

@@ -1,0 +1,2 @@
+# In recovery the HAL runs from the rootfs ramdisk.
+allow hal_bootctl_default rootfs:dir r_dir_perms;

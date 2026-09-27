@@ -31,6 +31,10 @@ TARGET_2ND_CPU_VARIANT_RUNTIME := cortex-a53
 
 TARGET_SUPPORTS_64_BIT_APPS := true
 
+# API levels: the stock vendor is frozen at API 30 (GRF), like stock
+# (ro.board.first_api_level=30).
+BOARD_SHIPPING_API_LEVEL := 30
+
 # Platform
 TARGET_BOARD_PLATFORM := mt6768
 TARGET_BOOTLOADER_BOARD_NAME := clove_row_wifi
@@ -155,9 +159,6 @@ TARGET_COPY_OUT_PRODUCT := product
 TARGET_COPY_OUT_VENDOR := vendor
 BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := erofs
 
-# The vendor partition still ships as a stock slot-A prebuilt (for now).
-CLOVE_PREBUILT_PATH := vendor/lenovo/clove_row_wifi
-BOARD_PREBUILT_VENDORIMAGE := $(CLOVE_PREBUILT_PATH)/images/vendor.img
 TARGET_COPY_OUT_VENDOR_DLKM := vendor_dlkm
 TARGET_COPY_OUT_ODM_DLKM := odm_dlkm
 TARGET_COPY_OUT_SYSTEM_DLKM := system_dlkm
@@ -179,7 +180,7 @@ BOARD_SYSTEM_DLKMIMAGE_FILE_SYSTEM_TYPE := erofs
 # other than Lenovo's/TWRP's makes first-stage init panic ("failed to read
 # default fstab for first stage mount"). See vendor/lenovo/clove_row_wifi/README.md.
 BOARD_VENDOR_RAMDISK_FRAGMENTS := init_boot
-BOARD_VENDOR_RAMDISK_FRAGMENT.init_boot.PREBUILT := $(CLOVE_PREBUILT_PATH)/images/vendor_ramdisk_init_boot.lz4
+BOARD_VENDOR_RAMDISK_FRAGMENT.init_boot.PREBUILT := vendor/extra/vendor_ramdisk_init_boot.lz4
 BOARD_VENDOR_RAMDISK_FRAGMENT.init_boot.MKBOOTIMG_ARGS := --ramdisk_type PLATFORM
 
 # Metadata encryption partition (dm-default-key on userdata)
@@ -196,42 +197,9 @@ BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES := true
 BUILD_BROKEN_PREBUILT_ELF_FILES := true
 
 # SELinux
-#
-# This port KEEPS the stock vendor partition, and that partition already ships
-# a complete, self-contained policy under /vendor/etc/selinux:
-#   vendor_sepolicy.cil (1.3M), plat_pub_versioned.cil, precompiled_sepolicy,
-#   vendor_{file,property,service,hwservice,seapp}_contexts, ...
-# Every Microtrust/Beanpod TEE type the crypto stack needs (teei_*, tee_exec,
-# hal_keymaster_default, teei_hal_thh, ...) is defined there already.
-#
-# It declares plat_sepolicy_vers.txt = 202404, which is exactly the Android 15
-# platform policy version that LineageOS 22.2 builds. Vendor and platform are
-# the same version, so NO compatibility mapping shim is required. (This is a
-# concrete reason the port targets LOS 22 rather than 23/Android 16.)
-#
-# We therefore deliberately do NOT:
-#   - set BOARD_VENDOR_SEPOLICY_DIRS  -- no vendor image is built, so any
-#     policy put there would never ship, and
-#   - include device/mediatek/sepolicy_vndr/SEPolicy.mk -- that is for devices
-#     which REBUILD vendor from blobs.
-# Adding either builds policy that goes nowhere and masks real errors.
-#
-# Only the system side is extended, for LineageOS-specific additions:
+include device/mediatek/sepolicy_vndr/SEPolicy.mk
+BOARD_VENDOR_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/vendor
 SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/private
-#
-# EXCEPTION to the rule above: vendor policy for LineageOS RECOVERY. Vendor
-# policy built here never reaches the device's vendor partition (it is a stock
-# prebuilt), but it IS compiled into the recovery ramdisk's sepolicy -- which is
-# exactly where MediaTek's recovery boot-control HAL needs rules (labelled misc
-# and whole-disk eMMC nodes, the boot-area switch ioctl). See sepolicy/recovery.
-BOARD_VENDOR_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/recovery
-#
-# NOTE: our rebuilt plat_sepolicy.cil will not match the vendor's
-# precompiled_sepolicy.plat_sepolicy_and_mapping.sha256
-# (201d593e465d235d5546e96d8720b6a4ba091257bdeb9e79d0f8825223ea2763), so init
-# discards the precompiled policy and compiles from CIL on every boot. That is
-# expected and correct for a custom system build; it costs ~1s of boot time and
-# requires those vendor CIL files to remain present.
 
 # Security patch level (stock ZUI 17 / Android 15)
 VENDOR_SECURITY_PATCH := 2026-05-05
@@ -244,6 +212,7 @@ TARGET_VENDOR_PROP += $(DEVICE_PATH)/vendor.prop
 # VINTF
 DEVICE_MANIFEST_FILE := $(DEVICE_PATH)/configs/vintf/manifest.xml
 DEVICE_MATRIX_FILE := $(DEVICE_PATH)/configs/vintf/compatibility_matrix.xml
+DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE += $(DEVICE_PATH)/configs/vintf/framework_compatibility_matrix.xml
 
 # Verified Boot
 # Stock LK enforces AVB against signed vbmeta. Custom builds require an
@@ -267,5 +236,19 @@ BOARD_AVB_VBMETA_VENDOR_ALGORITHM := SHA256_RSA4096
 BOARD_AVB_VBMETA_VENDOR_ROLLBACK_INDEX := 0
 BOARD_AVB_VBMETA_VENDOR_ROLLBACK_INDEX_LOCATION := 4
 
+# Wi-Fi
+WPA_SUPPLICANT_VERSION := VER_0_8_X
+BOARD_WPA_SUPPLICANT_DRIVER := NL80211
+BOARD_HOSTAPD_DRIVER := NL80211
+WIFI_DRIVER_FW_PATH_STA := "STA"
+WIFI_DRIVER_FW_PATH_AP := "AP"
+WIFI_DRIVER_FW_PATH_P2P := "P2P"
+WIFI_HIDL_FEATURE_DUAL_INTERFACE := true
+WIFI_HIDL_UNIFIED_SUPPLICANT_SERVICE_RC_ENTRY := true
+WIFI_DRIVER_FW_PATH_PARAM := "/dev/wmtWifi"
+WIFI_DRIVER_STATE_CTRL_PARAM := "/dev/wmtWifi"
+WIFI_DRIVER_STATE_ON := "1"
+WIFI_DRIVER_STATE_OFF := "0"
+
 # Inherit proprietary blob board config (generated by extract-files.py)
--include vendor/lenovo/clove_row_wifi/BoardConfigVendor.mk
+include vendor/lenovo/clove_row_wifi/BoardConfigVendor.mk

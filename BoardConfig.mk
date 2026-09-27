@@ -125,13 +125,6 @@ BOARD_BUILD_SUPER_IMAGE_BY_DEFAULT := false
 # Static partition image sizes
 BOARD_BOOTIMAGE_PARTITION_SIZE := 33554432
 BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE := 67108864
-# init_boot is BUILT but deliberately NOT in AB_OTA_PARTITIONS. On stock both
-# init_boot partitions are all zeros: Lenovo carries the generic ramdisk
-# (first-stage init + snapuserd) as the "init_boot" fragment of vendor_boot, and
-# boot holds the kernel only. The build puts the generic ramdisk into boot.img
-# unless it is building an init_boot image, so building one is what keeps
-# boot.img kernel-only; leaving it out of the OTA keeps the partition as stock.
-BOARD_INIT_BOOT_IMAGE_PARTITION_SIZE := 8388608
 BOARD_DTBOIMG_PARTITION_SIZE := 8388608
 BOARD_FLASH_BLOCK_SIZE := 262144
 
@@ -169,19 +162,13 @@ BOARD_VENDOR_DLKMIMAGE_FILE_SYSTEM_TYPE := erofs
 BOARD_ODM_DLKMIMAGE_FILE_SYSTEM_TYPE := erofs
 BOARD_SYSTEM_DLKMIMAGE_FILE_SYSTEM_TYPE := erofs
 
-# vendor_boot = [platform: stock, from PRODUCT_COPY_FILES] + [recovery: built
-# LineageOS recovery] + [init_boot: stock prebuilt fragment], the same three
-# fragments in the same order as stock.
+# vendor_boot = [platform: modules + first-stage fstab] + [recovery]. The
+# generic ramdisk (first-stage init, snapuserd) is in boot.img.
 #
 # NOTE: this LK loads ALL vendor ramdisk fragments on every boot, including
-# "recovery", and the device's real first-stage fstab is fstab.mt8786 -- which
-# Lenovo ships in the recovery fragment. The prebuilt platform fragment therefore
-# also carries first_stage_ramdisk/fstab.mt8786{,dm}; without them any recovery
-# other than Lenovo's/TWRP's makes first-stage init panic ("failed to read
-# default fstab for first stage mount"). See vendor/lenovo/clove_row_wifi/README.md.
-BOARD_VENDOR_RAMDISK_FRAGMENTS := init_boot
-BOARD_VENDOR_RAMDISK_FRAGMENT.init_boot.PREBUILT := vendor/extra/vendor_ramdisk_init_boot.lz4
-BOARD_VENDOR_RAMDISK_FRAGMENT.init_boot.MKBOOTIMG_ARGS := --ramdisk_type PLATFORM
+# "recovery", and the real first-stage fstab is fstab.mt8786, which Lenovo ships
+# only in its recovery fragment. The platform fragment therefore carries
+# first_stage_ramdisk/fstab.mt8786{,dm} (see device.mk).
 
 # Metadata encryption partition (dm-default-key on userdata)
 BOARD_USES_METADATA_PARTITION := true

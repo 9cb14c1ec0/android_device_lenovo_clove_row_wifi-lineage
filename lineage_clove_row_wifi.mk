@@ -7,16 +7,11 @@
 $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base.mk)
 
-# Virtual A/B with compression -- but NOT virtual_ab_ota/compression.mk: that
-# inherits launch_with_vendor_ramdisk.mk, which adds snapuserd, linker, e2fsck
-# and fsck.f2fs *vendor_ramdisk* variants under first_stage_ramdisk/. Lenovo's
-# generic ramdisk (the stock "init_boot" fragment of vendor_boot) already brings
-# snapuserd_ramdisk, and with our extra copies present first-stage init died
-# (exit 127, "Attempted to kill init!") ~4 ms after module loading on the first
-# boot of an OTA-updated slot, i.e. at the switch into /first_stage_ramdisk that
-# prepares snapuserd for the snapshot partitions. Without them the vendor_boot
-# platform fragment is byte-identical to stock. The ro.virtual_ab.* properties
-# (compression, userspace snapshots, xor, io_uring) come from stock vendor.
+# Generic ramdisk (first-stage init, snapuserd) goes into boot.img.
+$(call inherit-product, $(SRC_TARGET_DIR)/product/generic_ramdisk.mk)
+
+# Virtual A/B with compression. Not virtual_ab_ota/compression.mk: that also
+# puts snapuserd into the vendor ramdisk, and the generic ramdisk has it.
 $(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota/launch.mk)
 PRODUCT_VIRTUAL_AB_COMPRESSION := true
 PRODUCT_PACKAGES += \

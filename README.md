@@ -1,6 +1,6 @@
-# LineageOS 22.2 for Lenovo Tab One (TB305FU / clove_row_wifi)
+# LineageOS 23.2 for Lenovo Tab One (TB305FU / clove_row_wifi)
 
-Unofficial LineageOS 22.2 (Android 15) device tree for the Lenovo Tab One
+Unofficial LineageOS 23.2 (Android 16) device tree for the Lenovo Tab One
 Wi-Fi (`TB305FU`, device `clove_row_wifi`), a MediaTek MT8786 (MT6768 family)
 tablet with a GKI 6.6 kernel.
 
@@ -11,7 +11,7 @@ Boots with SELinux enforcing; tested on one device.
 | Area | State |
 | --- | --- |
 | Display, touch, SystemUI | works |
-| Wi-Fi (2.4 + 5 GHz, WPA3) | works |
+| Wi-Fi | scans; connecting not yet verified on 23.2 |
 | Bluetooth | turns on |
 | Cameras (front + rear) | both detected; capture not verified |
 | Audio | HAL starts; playback not verified |
@@ -19,7 +19,8 @@ Boots with SELinux enforcing; tested on one device.
 | GNSS | HAL starts; fix not verified on this build |
 | Encrypted `/data` (Beanpod Keymaster 4.1) | works |
 | A/B OTA via `adb sideload` / updater, LineageOS recovery | works |
-| Clean install (freshly formatted `/data`) | **untested** — only upgrades over an existing `/data` have been tested |
+| Factory reset from LineageOS recovery | works (boots to setup) |
+| Upgrade from 22.2 | installs; first boot, then factory reset tested |
 
 ## Repositories
 
@@ -45,9 +46,9 @@ the vendor module source.
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
     <remote name="clove" fetch="https://github.com/9cb14c1ec0" />
-    <project name="android_device_lenovo_clove_row_wifi-lineage" path="device/lenovo/clove_row_wifi" remote="clove" revision="lineage-22.2" />
-    <project name="android_device_lenovo_clove_row_wifi-kernel" path="device/lenovo/clove_row_wifi-kernel" remote="clove" revision="lineage-22.2" />
-    <project name="android_vendor_lenovo_clove_row_wifi" path="vendor/lenovo/clove_row_wifi" remote="clove" revision="lineage-22.2" />
+    <project name="android_device_lenovo_clove_row_wifi-lineage" path="device/lenovo/clove_row_wifi" remote="clove" revision="lineage-23.2" />
+    <project name="android_device_lenovo_clove_row_wifi-kernel" path="device/lenovo/clove_row_wifi-kernel" remote="clove" revision="lineage-23.2" />
+    <project name="android_vendor_lenovo_clove_row_wifi" path="vendor/lenovo/clove_row_wifi" remote="clove" revision="lineage-23.2" />
 </manifest>
 ```
 
@@ -58,12 +59,12 @@ manifest as well.
 ```bash
 repo sync
 source build/envsetup.sh
-lunch lineage_clove_row_wifi-bp1a-userdebug
+lunch lineage_clove_row_wifi-bp4a-userdebug
 m bacon
 ```
 
 The result is a full A/B OTA package,
-`out/target/product/clove_row_wifi/lineage-22.2-*-UNOFFICIAL-clove_row_wifi.zip`.
+`out/target/product/clove_row_wifi/lineage-23.2-*-UNOFFICIAL-clove_row_wifi.zip`.
 It does not contain firmware (preloader, LK, TEE, modem, ...).
 
 ## Installing
@@ -94,7 +95,7 @@ device was converted step by step during bring-up.
    fastboot reboot recovery
    ```
 4. In recovery: **Factory reset → Format data**, then **Apply update → Apply
-   from ADB** and run `adb sideload lineage-22.2-*.zip`. Reboot.
+   from ADB** and run `adb sideload lineage-23.2-*.zip`. Reboot.
 
 Later updates: sideload the new zip from recovery, or run
 `adb reboot sideload-auto-reboot` and `adb sideload <zip>`; the device reboots
@@ -107,10 +108,9 @@ on the host only finishes after that.
 | Path | Contents |
 | --- | --- |
 | `BoardConfig.mk`, `device.mk`, `lineage_clove_row_wifi.mk` | board, product |
-| `bootctrl/` | MediaTek boot control HAL (from LineageOS `hardware/mediatek`, lineage-23.2); switches the eMMC boot area (preloader) with the slot |
 | `rootdir/etc/` | vendor init scripts, fstabs, ueventd, module loading |
 | `sepolicy/vendor/` | device policy on top of `sepolicy_vndr`; `stock_port.te` and the contexts files are generated from the stock Lenovo vendor policy |
-| `configs/` | VINTF, permissions, Wi-Fi HAL descriptor |
+| `configs/` | VINTF, permissions |
 | `rro_overlays/` | framework and Wi-Fi overlays |
 | `proprietary-files.txt`, `extract-files.py`, `setup-makefiles.py` | blob list and extraction |
 
@@ -123,9 +123,9 @@ on the host only finishes after that.
   into the platform fragment. Without them any other recovery makes
   first-stage init panic.
 - **Wi-Fi HAL.** Lenovo's `libwifi-hal` is built against the Android 15
-  `wifi_hal.h`; it is installed as `libwifi-hal-mtk.so` and loaded directly by
-  the AOSP Wi-Fi service. `libwifi-hal-wrapper` from `hardware/mediatek`
-  (lineage-22.2) expects an older layout and must not be used here.
+  `wifi_hal.h`; it is installed as `libwifi-hal-mtk.so` and loaded through
+  `libwifi-hal-wrapper` from `hardware/mediatek`, built with
+  `use_pre_baklava_qpr0_struct`.
 - **`PRODUCT_SHIPPING_API_LEVEL := 34`** is required. With it unset,
   `hwservicemanager` is not installed, keystore2 cannot reach the HIDL
   Keymaster, `vold` blocks and the device hangs on the boot logo.

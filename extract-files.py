@@ -66,21 +66,25 @@ blob_fixups: blob_fixups_user_type = {
         'vendor/lib/vendor.mediatek.hardware.pq_aidl-V2-ndk.so',
         'vendor/lib/vendor.mediatek.hardware.pq_aidl-V7-ndk.so',
     ): blob_fixup()
-        .replace_needed('android.hardware.graphics.common-V4-ndk.so', 'android.hardware.graphics.common-V6-ndk.so')
-        .replace_needed('android.hardware.graphics.common-V5-ndk.so', 'android.hardware.graphics.common-V6-ndk.so'),
+        .replace_needed('android.hardware.graphics.common-V4-ndk.so', 'android.hardware.graphics.common-V7-ndk.so')
+        .replace_needed('android.hardware.graphics.common-V5-ndk.so', 'android.hardware.graphics.common-V7-ndk.so'),
     (
         'vendor/bin/hw/android.hardware.audio.service-aidl.mediatek',
-        'vendor/lib/android.hardware.audio.core-impl-mediatek.so',
         'vendor/lib/hw/android.hardware.soundtrigger3-impl.so',
         'vendor/lib/soundfx/libbundleaidl.so',
         'vendor/lib/soundfx/libswdapaidl.so',
         'vendor/lib/soundfx/libswgamedapaidl.so',
-        'vendor/lib64/android.hardware.audio.core-impl-mediatek.so',
         'vendor/lib64/hw/android.hardware.soundtrigger3-impl.so',
         'vendor/lib64/soundfx/libbundleaidl.so',
         'vendor/lib64/soundfx/libswdapaidl.so',
         'vendor/lib64/soundfx/libswgamedapaidl.so',
     ): blob_fixup()
+        .replace_needed('libaudio_aidl_conversion_common_ndk.so', 'libaudio_aidl_conversion_common_ndk_prebuilt.so'),
+    (
+        'vendor/lib/android.hardware.audio.core-impl-mediatek.so',
+        'vendor/lib64/android.hardware.audio.core-impl-mediatek.so',
+    ): blob_fixup()
+        .add_needed('libaudioutils_shim.so')
         .replace_needed('libaudio_aidl_conversion_common_ndk.so', 'libaudio_aidl_conversion_common_ndk_prebuilt.so'),
     (
         'vendor/bin/mnld',
@@ -89,6 +93,24 @@ blob_fixups: blob_fixups_user_type = {
         'vendor/lib64/libcam.utils.sensorprovider.so',
     ): blob_fixup()
         .replace_needed('android.hardware.sensors-V2-ndk.so', 'android.hardware.sensors-V3-ndk.so'),
+    (
+        'vendor/lib/hw/audio.primary.mt6768.so',
+        'vendor/lib/hw/vendor.mediatek.hardware.pq_aidl-impl.so',
+        'vendor/lib/lib_power_applist.so',
+        'vendor/lib/libpowerhal.so',
+        'vendor/lib/libpqxmlparser.so',
+        'vendor/lib/librt_extamp_intf.so',
+        'vendor/lib64/hw/android.hardware.audio.effect.aidl-impl-mediatek.so',
+        'vendor/lib64/hw/audio.primary.mt6768.so',
+        'vendor/lib64/hw/hwcomposer.mt6768.so',
+        'vendor/lib64/hw/vendor.mediatek.hardware.pq_aidl-impl.so',
+        'vendor/lib64/lib_power_applist.so',
+        'vendor/lib64/libpowerhal.so',
+        'vendor/lib64/libpqxmlparser.so',
+        'vendor/lib64/librt_extamp_intf.so',
+        'vendor/lib64/libsilkybrightnesscore.so',
+    ): blob_fixup()
+        .replace_needed('libtinyxml2.so', 'libtinyxml2-v34.so'),
 }  # fmt: skip
 
 module = ExtractUtilsModule(

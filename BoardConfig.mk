@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: The LineageOS Project
 # SPDX-License-Identifier: Apache-2.0
 #
-# LineageOS 22.2 (Android 15) board config for the Lenovo Tab One
+# LineageOS 23.2 (Android 16) board config for the Lenovo Tab One
 # (TB305FU / clove_row_wifi). MediaTek MT6768/MT8786 family, GKI 6.6 kernel.
 #
 

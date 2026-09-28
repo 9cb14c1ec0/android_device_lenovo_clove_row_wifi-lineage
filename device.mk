@@ -51,7 +51,7 @@ PRODUCT_PACKAGES += \
 
 # -- SurfaceFlinger RenderEngine ---------------------------------------------
 # Stock vendor sets debug.renderengine.backend=skiagl (non-threaded). With the
-# LOS 22.2 (A15 QPR2) SurfaceFlinger that path is a use-after-free:
+# LOS 22.2 (A15 QPR2) SurfaceFlinger (not yet re-checked on 23.2) that path is a use-after-free:
 # renderScreenImpl() captures a raw RenderArea* in a lambda that, for a
 # NON-threaded RenderEngine, is deferred onto the main thread after
 # captureScreenshot() has already destroyed the RenderArea. Every screenshot /
@@ -76,16 +76,12 @@ PRODUCT_PACKAGES += \
 # -- Soong namespace -----------------------------------------------------
 PRODUCT_SOONG_NAMESPACES += $(LOCAL_PATH)
 
-# Boot control. MediaTek's HAL (bootctrl/, built from source) rather than the
-# AOSP default: switching slots here also switches the eMMC boot area
+# Boot control. MediaTek's HAL (hardware/mediatek) rather than the AOSP default: switching slots here also switches the eMMC boot area
 # (preloader_a/b). LineageOS recovery has no boot HAL of its own, and without
 # one update_engine_sideload cannot install anything.
 PRODUCT_PACKAGES += \
     android.hardware.boot-service.mediatek \
     android.hardware.boot-service.mediatek_recovery
-
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/bootctrl/android.hardware.boot-service.mediatek.xml:$(TARGET_COPY_OUT_RECOVERY)/root/system/etc/vintf/manifest/android.hardware.boot-service.mediatek.xml
 
 # First-stage fstab (vendor_boot platform ramdisk). LK passes
 # androidboot.hardware=mt8786, so first-stage init reads fstab.mt8786; Lenovo
@@ -180,6 +176,12 @@ PRODUCT_PACKAGES += \
     libvisualizeraidl \
     libvolumesw
 
+# AEE stub libraries, chipinfo
+PRODUCT_PACKAGES += \
+    chipinfo \
+    libaedv \
+    libladder
+
 # DRM
 PRODUCT_PACKAGES += \
     android.hardware.drm-service.clearkey
@@ -189,23 +191,33 @@ PRODUCT_PACKAGES += \
     android.hardware.health-service.mediatek \
     android.hardware.health-service.mediatek-recovery
 
+# Memtrack
+PRODUCT_PACKAGES += \
+    android.hardware.memtrack-service.mediatek
+
 # Sensors (the sub-HALs listed in /vendor/etc/sensors/hals.conf are blobs)
 PRODUCT_PACKAGES += \
     android.hardware.sensors-service.multihal \
     sensors.dynamic_sensor_hal
 
+# USB: the stock init.mt6768.usb.rc (rootdir/etc) is used, not the one from
+# hardware/mediatek.
+$(call soong_config_set_bool,mediatek_gadget,use_custom_usb_gadget_rc,true)
+
 # VNDK
 PRODUCT_PACKAGES += \
     vndservicemanager
 
-# Wi-Fi: AOSP service, loading Lenovo's libwifi-hal-mtk.so as a vendor HAL
+# Wi-Fi: AOSP service. Lenovo's libwifi-hal-mtk.so is built against the
+# Android 15 wifi_hal.h; libwifi-hal-wrapper translates its function table.
+$(call soong_config_set_bool,mediatek_wifi_hal,use_pre_baklava_qpr0_struct,true)
+
 PRODUCT_PACKAGES += \
     android.hardware.wifi-service \
     hostapd \
+    libwifi-hal-wrapper \
+    wlan_assistant \
     wpa_supplicant
-
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/wifi/libwifi-hal-mtk.xml:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/vendor_hals/libwifi-hal-mtk.xml
 
 PRODUCT_SOONG_NAMESPACES += \
     hardware/mediatek

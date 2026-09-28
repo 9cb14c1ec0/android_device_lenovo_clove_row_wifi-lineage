@@ -104,8 +104,5 @@
         <version>7</version>
         <fqname>IPictureQuality_AIDL/default</fqname>
     </hal>
-    <sepolicy>
-        <version>202404</version>
-    </sepolicy>
     <kernel target-level="6"/>
 </manifest>

@@ -11,10 +11,10 @@ Boots with SELinux enforcing; tested on one device.
 | Area | State |
 | --- | --- |
 | Display, touch, SystemUI | works |
-| Wi-Fi | scans; connecting not yet verified on 23.2 |
+| Wi-Fi | works |
 | Bluetooth | turns on |
-| Cameras (front + rear) | both detected; capture not verified |
-| Audio | HAL starts; playback not verified |
+| Cameras (front + rear) | work |
+| Audio playback | works |
 | Sensors | accelerometer, light and virtual sensors listed |
 | GNSS | HAL starts; fix not verified on this build |
 | Encrypted `/data` (Beanpod Keymaster 4.1) | works |

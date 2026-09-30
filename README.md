@@ -12,7 +12,7 @@ Boots with SELinux enforcing; tested on one device.
 | --- | --- |
 | Display, touch, SystemUI | works |
 | Wi-Fi (2.4 + 5 GHz, WPA3) | works |
-| Bluetooth | turns on |
+| Bluetooth | audio profiles enabled (fix verified on 23.2, not re-tested on 22.2) |
 | Cameras (front + rear) | both detected; capture not verified |
 | Audio | HAL starts; playback not verified |
 | Sensors | accelerometer, light and virtual sensors listed |

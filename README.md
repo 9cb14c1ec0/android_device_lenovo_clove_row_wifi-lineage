@@ -12,7 +12,7 @@ Boots with SELinux enforcing; tested on one device.
 | --- | --- |
 | Display, touch, SystemUI | works |
 | Wi-Fi | works |
-| Bluetooth | turns on |
+| Bluetooth (audio: A2DP, HFP) | works |
 | Cameras (front + rear) | work |
 | Audio playback | works |
 | Sensors | accelerometer, light and virtual sensors listed |
